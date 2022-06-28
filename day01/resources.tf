@@ -18,17 +18,17 @@ output aipc_ssh_key_id {
   value = data.digitalocean_ssh_key.aipc.id
 }
 
-data "docker_image" "dovbear" {
+data docker_image dovbear {
   name = "chukmunnlee/dov-bear:v2"
 }
 
-output dov-bear-md5 {
+output dov_bear_md5 {
   value = data.docker_image.dovbear.repo_digest
   description = "SHA of the image"
 }
 
 // option 1
-# resource "docker_container" "dovbear-container" {
+# resource "docker_container" "dovbear_container" {
 #   count = length(var.ports)
 #   name = "dovbear-${count.index}"
 #   image = data.docker_image.dovbear.id
@@ -43,7 +43,7 @@ output dov-bear-md5 {
 # }
 
 // option 2
-resource "docker_container" "dovbear-container" {
+resource docker_container dovbear_container {
   for_each = var.containers
   name = "dovbear-${each.key}"
   image = data.docker_image.dovbear.id
@@ -57,12 +57,12 @@ resource "docker_container" "dovbear-container" {
   }
 }
 
-output container-names {
-  value = [ for c in docker_container.dovbear-container: c.name ]
+output container_names {
+  value = [ for c in docker_container.dovbear_container: c.name ]
 }
 
-resource local_file container-names {
-  content = join(", ", [ for c in docker_container.dovbear-container: c.name ])
+resource local_file container_names {
+  content = join(", ", [ for c in docker_container.dovbear_container: c.name ])
   filename = "containers.txt"
   file_permission = "0644"
 }
