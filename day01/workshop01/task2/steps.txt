@@ -1,0 +1,11 @@
+# create docker network (mynet) to bridge between myapp and mydb
+docker network create –d bridge mynet
+
+# create volume to persist
+docker volume create myvolume
+
+# run database with volume and in mynet
+docker run -d --name mydb -v myvolume:/var/lib/mysql --network mynet stackupiss/northwind-db:v1 
+
+# run app and in mynet with the following environment variables (DB_HOST=mydb -e DB_USER=root -e DB_PASSWORD=changeit)
+docker run -d -p 3000:3000 -e PORT=3000 -e DB_HOST=mydb -e DB_USER=root -e DB_PASSWORD=changeit --network mynet --name myapp stackupiss/northwind-app:v1
