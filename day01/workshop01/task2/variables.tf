@@ -1,27 +1,24 @@
-variable nw_images {
-  type = map(object({
-    image_name = string
-    port = number
-  }))
-
-  default = {
-    nwdb = {
-      image_name = "stackupiss/northwind-db:v1"
-      port = 3006
-    }
-    nwapp = {
-      image_name = "stackupiss/northwind-app:v1"
-      port = 3000
-    }
-  }
-}
-
-variable db_user {
+variable DO_token {
   type = string
-  default = "root"
+  sensitive = true
 }
 
-variable db_password {
+variable DO_image {
+  type = string
+  default = "ubuntu-20-04-x64"
+}
+
+variable DO_region {
+  type = string
+  default = "sgp1"
+}
+
+variable DO_size {
+  type = string
+  default = "s-1vpcu-1gb"
+}
+
+variable DO_private_key {
   type = string
   sensitive = true
 }
