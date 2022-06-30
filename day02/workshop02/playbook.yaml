@@ -32,14 +32,6 @@
       sudo ln -s /usr/lib/code-server/bin/code-server /usr/bin/code-server
       sudo mkdir /var/lib/code-server
     when: not codeserver331_installed_exists.stat.exists
-  - name: Enable codeserver and Nginx
-    systemd:
-      name: "{{ item }}"
-      state: started
-      enabled: yes
-    loop:
-    - nginx
-    - code-server
   - name: Generate config file for Nginx codeserver
     template:
       src: ./code-server.conf.j2
@@ -53,6 +45,14 @@
       src: /etc/nginx/sites-available/code-server.conf
       dest: /etc/nginx/sites-enabled/code-server.conf
       state: link
+  - name: Enable codeserver and Nginx
+    systemd:
+      name: "{{ item }}"
+      state: started
+      enabled: yes
+    loop:
+    - nginx
+    - code-server
   - name: Restart Nginx
     systemd:
       name: nginx

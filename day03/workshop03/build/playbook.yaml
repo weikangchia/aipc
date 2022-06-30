@@ -1,0 +1,45 @@
+- name: Setup codeserver
+  hosts: all
+  tasks:
+  - name: Install packages
+    apt:
+      update_cache: yes
+      name: "{{ item }}"
+      state: latest
+    loop:
+    - nginx
+  - name: Check if codeserver files downloaded
+    stat:
+      path: "~/code-server/code-server-{{ codeserver_version }}-linux-amd64.tar.gz"
+    register: codeserver_downloaded
+  - name: Download codeserver files
+    shell: |
+      mkdir ~/code-server
+      cd ~/code-server
+      wget "https://github.com/cdr/code-server/releases/download/v{{ codeserver_version }}/code-server-{{ codeserver_version }}-linux-amd64.tar.gz"
+      tar -xzvf "code-server-{{ codeserver_version }}-linux-amd64.tar.gz"
+    when: not codeserver_downloaded.stat.exists
+  - name: Check if codeserver files is installed
+    stat:
+      path: /var/lib/code-server
+    register: codeserver_installed_exists
+  - name: Install CodeServer
+    shell: |
+      cd ~/code-server
+      sudo cp -r "code-server-{{ codeserver_version }}-linux-amd64" /usr/lib/code-server
+      sudo ln -s /usr/lib/code-server/bin/code-server /usr/bin/code-server
+      sudo mkdir /var/lib/code-server
+    when: not codeserver_installed_exists.stat.exists
+  - name: Allow all access to tcp port 80
+    ufw:
+      rule: allow
+      port: 80
+      proto: tcp
+  - name: Allow all access to tcp port 22
+    ufw:
+      rule: allow
+      port: 22
+      proto: tcp
+  - name: Enable UFW
+    ufw:
+      state: enabled
