@@ -1,0 +1,26 @@
+- name: Setup codeserver
+  hosts: all
+  tasks:
+  - name: Generate config file for Nginx codeserver
+    template:
+      src: ./code-server.conf.j2
+      dest: /etc/nginx/sites-available/code-server.conf
+  - name: Generate config file for codeserver service
+    template:
+      src: ./code-server.service.j2
+      dest: /lib/systemd/system/code-server.service
+  - name: Enable codeserver Nginx sites
+    file:
+      src: /etc/nginx/sites-available/code-server.conf
+      dest: /etc/nginx/sites-enabled/code-server.conf
+      state: link
+  - name: Start code-server
+    systemd:
+      daemon_reload: yes
+      name: code-server
+      enabled: yes
+      state: started
+  - name: Restart Nginx
+    systemd:
+      name: nginx
+      state: restarted

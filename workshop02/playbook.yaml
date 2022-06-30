@@ -1,0 +1,70 @@
+- name: Setup codeserver
+  hosts: all
+  tasks:
+  - name: Check connectivity
+    ping:
+  - name: Install packages
+    apt:
+      update_cache: yes
+      name: "{{ item }}"
+      state: latest
+    loop:
+    - nginx
+  - name: Check if codeserver files 3.3.1 downloaded
+    stat:
+      path: ~/code-server/code-server-3.3.1-linux-amd64.tar.gz
+    register: codeserver331_downloaded
+  - name: Download codeserver files 3.3.1
+    shell: |
+      mkdir ~/code-server
+      cd ~/code-server
+      wget https://github.com/cdr/code-server/releases/download/v3.3.1/code-server-3.3.1-linux-amd64.tar.gz
+      tar -xzvf code-server-3.3.1-linux-amd64.tar.gz
+    when: not codeserver331_downloaded.stat.exists
+  - name: Check if codeserver files 3.3.1 is installed
+    stat:
+      path: /var/lib/code-server
+    register: codeserver331_installed_exists
+  - name: Install CodeServer 3.3.1
+    shell: |
+      cd ~/code-server
+      sudo cp -r code-server-3.3.1-linux-amd64 /usr/lib/code-server
+      sudo ln -s /usr/lib/code-server/bin/code-server /usr/bin/code-server
+      sudo mkdir /var/lib/code-server
+    when: not codeserver331_installed_exists.stat.exists
+  - name: Generate config file for Nginx codeserver
+    template:
+      src: ./code-server.conf.j2
+      dest: /etc/nginx/sites-available/code-server.conf
+  - name: Generate config file for codeserver service
+    template:
+      src: ./code-server.service.j2
+      dest: /lib/systemd/system/code-server.service
+  - name: Start code-server
+    systemd:
+      daemon_reload: yes
+      name: code-server
+      enabled: yes
+      state: started
+  - name: Enable codeserver Nginx sites
+    file:
+      src: /etc/nginx/sites-available/code-server.conf
+      dest: /etc/nginx/sites-enabled/code-server.conf
+      state: link
+  - name: Restart Nginx
+    systemd:
+      name: nginx
+      state: restarted
+  - name: Allow all access to tcp port 80
+    ufw:
+      rule: allow
+      port: 80
+      proto: tcp
+  - name: Allow all access to tcp port 22
+    ufw:
+      rule: allow
+      port: 22
+      proto: tcp
+  - name: Enable UFW
+    ufw:
+      state: enabled
